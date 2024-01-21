@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="13a39903-81b6-4367-9157-d78219207f5c" basePath="/api" >
+		<http:request-connection protocol="HTTPS" host="reqres.in" port="443" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a5f33069-9417-40cd-adc5-9ca51f1d09f9" basePath="/maven" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<flow name="maven-reqres-poc-flow" doc:id="fa01753b-bd60-4fe8-ac7b-0fe8f3481902" >
+		<http:listener doc:name="Listener" doc:id="07a6e38c-0745-415a-8cb8-b0775c1d435d" config-ref="HTTP_Listener_config" path="/poc/{pageId}"/>
+		<logger level="INFO" doc:name="Start" doc:id="5f340d88-4781-48e7-827f-1282e742befa" message="#[{&#10;	payload: payload,&#10;	timestamp: now(),&#10;	correlationId: correlationId&#10;}]"/>
+		<http:request method="GET" doc:name="Reqres Request" doc:id="2db6d30e-0b8f-41b9-81d1-b9c0c6a08bb2" config-ref="HTTP_Request_configuration" path="/users">
+			<http:body ><![CDATA[#[true]]]></http:body>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	page : attributes.uriParams.pageId
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="End" doc:id="e555cd23-914f-460f-9c15-675f382c2614" message="#[{&#10;	payload: payload,&#10;	timestamp: now(),&#10;	correlationId: correlationId&#10;}]"/>
+	</flow>
+</mule>

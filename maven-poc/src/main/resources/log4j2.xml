@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+
+    <!--These are some of the loggers you can enable. 
+        There are several more you can find in the documentation. 
+        Besides this log4j configuration, you can also use Java VM environment variables
+        to enable other logs like network (-Djavax.net.debug=ssl or all) and 
+        Garbage Collector (-XX:+PrintGC). These will be append to the console, so you will 
+        see them in the mule_ee.log file. -->
+
+    <Appenders>
+        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}maven-poc.log"
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}maven-poc-%i.log">
+            <!-- <PatternLayout pattern="%-5p %d [%t] [processor: %X{processorPath}; event: %X{correlationId}] %c: %m%n"/> -->
+            <JsonLayout complete="true" properties="true">
+            	<KeyValuePair key="timestamp" value="${date:dd MMM yyyy HH:mm:ss,SSS}" />
+   				<KeyValuePair key="correlationId" value="${ctx:correlationId}" />
+   				<KeyValuePair key="service.namespace" value="${env:environment.id}" />
+            </JsonLayout>
+            <SizeBasedTriggeringPolicy size="10 MB"/>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        <Http name="dynatrace" url="https://aag12416.live.dynatrace.com/api/v2/logs/ingest">
+			<Property name="Authorization" value="Api-Token dt0c01.RQWBFDDTXKQRJYI6ID55VG4L.XKJVH4UQCHR25JKKYQZFLLRGXWHGAIKI3NCDTJ4D7BLLYOYQZTQUGPGBTGWRJXOH" />
+			<Property name="Content-Type" value="application/json; charset=utf-8" />
+            <JsonLayout properties="true" compact="true">
+            	<KeyValuePair key="service.name" value="mulesoftDemo" />
+            	<KeyValuePair key="service.namespace" value="${env:environment.id}" />
+            </JsonLayout>
+        </Http>
+    </Appenders>
+
+    <Loggers>
+        <!-- Http Logger shows wire traffic on DEBUG -->
+        <!--AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="DEBUG"/-->
+        <AsyncLogger name="org.mule.service.http" level="WARN"/>
+        <AsyncLogger name="org.mule.extension.http" level="WARN"/>
+
+        <!-- Mule logger -->
+        <AsyncLogger name="org.mule.runtime.core.internal.processor.LoggerMessageProcessor" level="INFO"/>
+
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="file"/>
+            <AppenderRef ref="dynatrace" />
+        </AsyncRoot>
+    </Loggers>
+
+</Configuration>
